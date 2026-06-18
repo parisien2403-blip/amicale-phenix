@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trésorerie — Amicale du Phénix du 4ᵉ RIISC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#14213D;
+  --navy-light:#22386b;
+  --parchment:#F4F0E6;
+  --paper:#FFFFFF;
+  --gold:#C9A227;
+  --garnet:#7A2E2E;
+  --sage:#4F6B45;
+  --ink:#2B2D33;
+  --muted:#6B6F76;
+  --line:#E2DCC9;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(20,33,61,.06), 0 6px 18px rgba(20,33,61,.06);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--parchment);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  line-height:1.45;
+  min-height:100vh;
+}
+h1,h2,h3{font-family:'Spectral',serif;margin:0 0 .4rem 0;color:var(--navy);}
+.num{font-family:'IBM Plex Mono',monospace;}
+
+/* ---------- En-tête ---------- */
+.topbar{
+  background:linear-gradient(135deg,var(--navy),#0e1830);
+  color:#fff;
+  padding:1.1rem 1.5rem;
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  flex-wrap:wrap;
+  border-bottom:3px solid var(--gold);
+}
+.topbar .titre-bloc{flex:1;min-width:220px;}
+.topbar h1{color:#fff;font-size:1.35rem;letter-spacing:.01em;margin:0;}
+.topbar .sous-titre{color:var(--gold);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-top:.15rem;}
+.solde-chip{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(201,162,39,.4);
+  border-radius:8px;
+  padding:.55rem .9rem;
+  text-align:right;
+  min-width:160px;
+}
+.solde-chip .libelle{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:#cfd6e6;}
+.solde-chip .valeur{font-family:'IBM Plex Mono',monospace;font-size:1.15rem;font-weight:600;color:var(--gold);}
+
+/* ---------- Navigation ---------- */
+.tabs{
+  display:flex;
+  gap:.25rem;
+  background:#0e1830;
+  padding:0 1rem;
+  overflow-x:auto;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.tab-btn{
+  background:transparent;
+  color:#b9c2d6;
+  border:none;
+  border-bottom:3px solid transparent;
+  padding:.75rem .9rem;
+  font:600 .8rem 'Inter',sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.tab-btn:hover{color:#fff;}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* ---------- Contenu ---------- */
+main{max-width:1080px;margin:0 auto;padding:1.5rem;}
+.tab-panel[hidden]{display:none;}
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:1.25rem;
+  margin-bottom:1.25rem;
+}
+.card h2{font-size:1.05rem;border-bottom:1px solid var(--line);padding-bottom:.5rem;margin-bottom:1rem;}
+.card .note{color:var(--muted);font-size:.85rem;}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem 1rem;align-items:end;}
+label{display:flex;flex-direction:column;gap:.3rem;font-size:.78rem;font-weight:600;color:var(--muted);}
+input,select,textarea{
+  font:inherit;font-size:.9rem;
+  padding:.5rem .6rem;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:#fff;
+  color:var(--ink);
+  width:100%;
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{
+  outline:2px solid var(--gold);outline-offset:1px;
+}
+.form-actions{display:flex;gap:.5rem;align-items:center;}
+
+button{
+  cursor:pointer;border:none;border-radius:6px;
+  padding:.55rem 1rem;font:600 .82rem 'Inter',sans-serif;
+  background:var(--navy);color:#fff;
+}
+button:hover{background:var(--navy-light);}
+.btn-secondary{background:transparent;color:var(--navy);border:1px solid var(--line);}
+.btn-secondary:hover{background:var(--parchment);}
+.btn-danger{background:var(--garnet);}
+.btn-danger:hover{background:#5e2222;}
+.btn-small{padding:.3rem .55rem;font-size:.72rem;}
+
+.filters{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0;align-items:center;}
+.filters input{width:auto;min-width:140px;}
+
+table{width:100%;border-collapse:collapse;font-size:.86rem;}
+thead th{
+  text-align:left;font:600 .68rem 'Inter',sans-serif;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--muted);border-bottom:2px solid var(--line);
+  padding:.5rem .55rem;
+}
+tbody td{padding:.55rem .55rem;border-bottom:1px solid var(--line);vertical-align:middle;}
+tbody tr:hover{background:rgba(201,162,39,.07);}
+td.num,th.num{font-family:'IBM Plex Mono',monospace;text-align:right;white-space:nowrap;}
+.pos{color:var(--sage);}
+.neg{color:var(--garnet);}
+tr.ligne-total td{font-weight:700;border-top:2px solid var(--navy);border-bottom:none;background:transparent;}
+.table-wrap{overflow-x:auto;}
+.vide{color:var(--muted);font-style:italic;padding:.75rem 0;}
+.actions-col{white-space:nowrap;}
+.actions-col button{margin-right:.3rem;}
+
+/* ---------- Tableau de bord ---------- */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-bottom:1.25rem;}
+.stat-card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:1rem 1.1rem;
+}
+.stat-card .libelle{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;}
+.stat-card .valeur{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:600;margin-top:.25rem;color:var(--navy);}
+
+/* ---------- Caisse ---------- */
+.denom-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:.6rem;}
+.denom-item{display:flex;flex-direction:column;gap:.25rem;background:var(--parchment);border:1px solid var(--line);border-radius:8px;padding:.5rem .6rem;}
+.denom-item .denom-label{font-size:.78rem;font-weight:700;color:var(--navy);}
+.denom-item .sous-total{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--muted);}
+.denom-item input{padding:.35rem .4rem;}
+.cheques-list{display:flex;flex-direction:column;gap:.5rem;margin:.75rem 0;}
+.cheque-row{display:flex;gap:.5rem;align-items:center;}
+.cheque-row input{flex:1;}
+.total-bandeau{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;
+  background:var(--navy);color:#fff;border-radius:8px;padding:.75rem 1rem;margin:1rem 0;
+}
+.total-bandeau .valeur{font-family:'IBM Plex Mono',monospace;font-size:1.3rem;color:var(--gold);font-weight:700;}
+.ecart-ok{color:var(--sage);font-weight:700;}
+.ecart-bad{color:var(--garnet);font-weight:700;}
+
+footer{text-align:center;color:var(--muted);font-size:.78rem;padding:1.5rem 1rem 2rem;}
+
+@media (max-width:640px){
+  .topbar{flex-direction:column;align-items:flex-start;}
+  .solde-chip{text-align:left;width:100%;}
+  .form-grid{grid-template-columns:1fr;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <svg viewBox="0 0 100 100" width="50" height="50" aria-hidden="true">
+    <circle cx="50" cy="50" r="48" fill="none" stroke="#C9A227" stroke-width="2"/>
+    <circle cx="50" cy="50" r="40" fill="#0e1830"/>
+    <path d="M50 18 C 57 28, 71 30, 78 22 C 71 39, 58 44, 50 39 C 42 44, 29 39, 22 22 C 29 30, 43 28, 50 18 Z" fill="#C9A227"/>
+    <path d="M50 39 C 55 49, 67 53, 71 66 C 58 61, 51 57, 50 47 C 49 57, 42 61, 29 66 C 33 53, 45 49, 50 39 Z" fill="#C9A227"/>
+    <path d="M50 66 C 53 74, 57 78, 50 87 C 43 78, 47 74, 50 66 Z" fill="#C9A227"/>
+  </svg>
+  <div class="titre-bloc">
+    <h1>Trésorerie — Amicale du Phénix</h1>
+    <div class="sous-titre">4ᵉ RIISC · Caisse, banque &amp; cotisants</div>
+  </div>
+  <div class="solde-chip">
+    <div class="libelle">Résultat cumulé</div>
+    <div class="valeur" id="chip-resultat">0,00 €</div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="dashboard">Tableau de bord</button>
+  <button class="tab-btn" data-tab="recettes">Recettes</button>
+  <button class="tab-btn" data-tab="depenses">Dépenses</button>
+  <button class="tab-btn" data-tab="caisse">Caisse</button>
+  <button class="tab-btn" data-tab="banque">Banque</button>
+  <button class="tab-btn" data-tab="cotisants">Cotisants</button>
+  <button class="tab-btn" data-tab="donnees">Données</button>
+</nav>
+
+<main>
+
+  <!-- ===================== TABLEAU DE BORD ===================== -->
+  <section id="tab-dashboard" class="tab-panel">
+    <div class="stats-grid" id="dashboard-stats"></div>
+    <div class="card">
+      <h2>Dernières opérations</h2>
+      <div class="table-wrap" id="dashboard-recent"></div>
+    </div>
+  </section>
+
+  <!-- ===================== RECETTES ===================== -->
+  <section id="tab-recettes" class="tab-panel" hidden>
+    <div class="card">
+      <h2 id="recette-form-titre">Ajouter une recette</h2>
+      <form id="form-recette" class="form-grid">
+        <input type="hidden" id="recette-edit-id">
+        <label>Date
+          <input type="date" id="recette-date" required>
+        </label>
+        <label>Libellé (prestation, vente, cotisation...)
+          <input type="text" id="recette-libelle" placeholder="Ex : Loto de printemps" required>
+        </label>
+        <label>Montant (€)
+          <input type="number" step="0.01" min="0" id="recette-montant" required>
+        </label>
+        <label>Moyen de paiement
+          <select id="recette-moyen">
+            <option>Espèces</option>
+            <option>Chèque</option>
+            <option>Virement</option>
+            <option>Carte bancaire</option>
+            <option>Autre</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="recette-submit-btn">Ajouter</button>
+          <button type="button" id="recette-cancel-btn" class="btn-secondary" hidden>Annuler</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Liste des recettes</h2>
+      <div class="filters">
+        <input type="text" id="recette-recherche" placeholder="Rechercher un libellé...">
+        <label style="flex-direction:row;align-items:center;gap:.3rem;font-weight:400;">Du <input type="date" id="recette-date-debut"></label>
+        <label style="flex-direction:row;align-items:center;gap:.3rem;font-weight:400;">au <input type="date" id="recette-date-fin"></label>
+        <button type="button" id="recette-filtre-reset" class="btn-secondary btn-small">Réinitialiser</button>
+        <button type="button" id="recette-export" class="btn-secondary btn-small">Exporter en Excel</button>
+      </div>
+      <div class="table-wrap" id="recettes-table"></div>
+    </div>
+  </section>
+
+  <!-- ===================== DEPENSES ===================== -->
+  <section id="tab-depenses" class="tab-panel" hidden>
+    <div class="card">
+      <h2 id="depense-form-titre">Ajouter une dépense</h2>
+      <form id="form-depense" class="form-grid">
+        <input type="hidden" id="depense-edit-id">
+        <label>Date
+          <input type="date" id="depense-date" required>
+        </label>
+        <label>Libellé (nom du magasin / fournisseur)
+          <input type="text" id="depense-libelle" placeholder="Ex : Décathlon, Traiteur Martin..." required>
+        </label>
+        <label>Montant (€)
+          <input type="number" step="0.01" min="0" id="depense-montant" required>
+        </label>
+        <label>Moyen de paiement
+          <select id="depense-moyen">
+            <option>Espèces</option>
+            <option>Chèque</option>
+            <option>Virement</option>
+            <option>Carte bancaire</option>
+            <option>Autre</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="depense-submit-btn">Ajouter</button>
+          <button type="button" id="depense-cancel-btn" class="btn-secondary" hidden>Annuler</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Liste des dépenses</h2>
+      <div class="filters">
+        <input type="text" id="depense-recherche" placeholder="Rechercher un libellé...">
+        <label style="flex-direction:row;align-items:center;gap:.3rem;font-weight:400;">Du <input type="date" id="depense-date-debut"></label>
+        <label style="flex-direction:row;align-items:center;gap:.3rem;font-weight:400;">au <input type="date" id="depense-date-fin"></label>
+        <button type="button" id="depense-filtre-reset" class="btn-secondary btn-small">Réinitialiser</button>
+        <button type="button" id="depense-export" class="btn-secondary btn-small">Exporter en Excel</button>
+      </div>
+      <div class="table-wrap" id="depenses-table"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CAISSE ===================== -->
+  <section id="tab-caisse" class="tab-panel" hidden>
+    <div class="card">
+      <h2 id="caisse-form-titre">Nouveau comptage de caisse</h2>
+      <p class="note">Indiquez le nombre de billets et de pièces que vous avez physiquement en caisse, ainsi que les chèques non encore déposés.</p>
+      <label>Date du comptage
+        <input type="date" id="caisse-date" style="max-width:220px;">
+      </label>
+      <h3 style="margin-top:1rem;font-size:.95rem;">Billets</h3>
+      <div class="denom-grid" id="caisse-billets-grid"></div>
+      <h3 style="margin-top:1rem;font-size:.95rem;">Pièces</h3>
+      <div class="denom-grid" id="caisse-pieces-grid"></div>
+      <h3 style="margin-top:1rem;font-size:.95rem;">Chèques en caisse</h3>
+      <div class="cheques-list" id="caisse-cheques-list"></div>
+      <button type="button" id="caisse-ajouter-cheque" class="btn-secondary btn-small">+ Ajouter un chèque</button>
+      <label style="margin-top:1rem;">Note (facultatif)
+        <input type="text" id="caisse-note" placeholder="Ex : comptage trimestriel">
+      </label>
+      <div class="total-bandeau">
+        <span>Total compté</span>
+        <span class="valeur" id="caisse-total-affiche">0,00 €</span>
+      </div>
+      <div class="form-actions">
+        <input type="hidden" id="caisse-edit-id">
+        <button type="button" id="caisse-submit-btn">Enregistrer ce comptage</button>
+        <button type="button" id="caisse-cancel-btn" class="btn-secondary" hidden>Annuler</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Solde théorique de caisse</h2>
+      <p class="note">Calculé à partir de toutes les recettes et dépenses réglées en espèces.</p>
+      <div class="stat-card" style="max-width:260px;">
+        <div class="libelle">Solde théorique</div>
+        <div class="valeur" id="caisse-theorique-affiche">0,00 €</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Historique des comptages</h2>
+      <div class="table-wrap" id="caisse-historique"></div>
+    </div>
+  </section>
+
+  <!-- ===================== BANQUE ===================== -->
+  <section id="tab-banque" class="tab-panel" hidden>
+    <div class="card">
+      <h2>Solde théorique bancaire</h2>
+      <p class="note">Calculé à partir des recettes et dépenses réglées par chèque, virement ou carte bancaire.</p>
+      <div class="stat-card" style="max-width:260px;">
+        <div class="libelle">Solde théorique</div>
+        <div class="valeur" id="banque-theorique-affiche">0,00 €</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="banque-form-titre">Ajouter un relevé bancaire</h2>
+      <form id="form-banque" class="form-grid">
+        <input type="hidden" id="banque-edit-id">
+        <label>Date du relevé
+          <input type="date" id="banque-date" required>
+        </label>
+        <label>Solde réel constaté (€)
+          <input type="number" step="0.01" id="banque-solde" required>
+        </label>
+        <label>Note (facultatif)
+          <input type="text" id="banque-note" placeholder="Ex : relevé du Crédit Agricole">
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="banque-submit-btn">Ajouter</button>
+          <button type="button" id="banque-cancel-btn" class="btn-secondary" hidden>Annuler</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Historique des relevés</h2>
+      <div class="table-wrap" id="banque-historique"></div>
+    </div>
+  </section>
+
+  <!-- ===================== COTISANTS ===================== -->
+  <section id="tab-cotisants" class="tab-panel" hidden>
+    <div class="card">
+      <h2>Importer la liste des cotisants depuis Excel</h2>
+      <p class="note">Le fichier doit contenir, si possible avec des en-têtes, les colonnes <strong>Grade</strong>, <strong>Nom</strong> et <strong>Prénom</strong> (les colonnes Cotisation, Montant et Date sont facultatives).</p>
+      <input type="file" id="cotisants-import" accept=".xlsx,.xls,.csv">
+    </div>
+    <div class="card">
+      <h2 id="cotisant-form-titre">Ajouter un cotisant</h2>
+      <form id="form-cotisant" class="form-grid">
+        <input type="hidden" id="cotisant-edit-id">
+        <label>Grade
+          <input type="text" id="cotisant-grade" placeholder="Ex : Caporal">
+        </label>
+        <label>Nom
+          <input type="text" id="cotisant-nom" required>
+        </label>
+        <label>Prénom
+          <input type="text" id="cotisant-prenom" required>
+        </label>
+        <label>Montant cotisation (€)
+          <input type="number" step="0.01" min="0" id="cotisant-montant">
+        </label>
+        <label>Date de paiement
+          <input type="date" id="cotisant-date">
+        </label>
+        <label style="flex-direction:row;align-items:center;gap:.4rem;">
+          <input type="checkbox" id="cotisant-paye" style="width:auto;">
+          Cotisation versée
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="cotisant-submit-btn">Ajouter</button>
+          <button type="button" id="cotisant-cancel-btn" class="btn-secondary" hidden>Annuler</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Liste des cotisants</h2>
+      <div class="filters">
+        <input type="text" id="cotisant-recherche" placeholder="Rechercher un nom...">
+        <button type="button" id="cotisant-export" class="btn-secondary btn-small">Exporter en Excel</button>
+      </div>
+      <div class="table-wrap" id="cotisants-table"></div>
+    </div>
+  </section>
+
+  <!-- ===================== DONNEES ===================== -->
+  <section id="tab-donnees" class="tab-panel" hidden>
+    <div class="card">
+      <h2>Sauvegarde des données</h2>
+      <p class="note">
+        Toutes les données sont enregistrées uniquement dans ce navigateur, sur cet ordinateur (mémoire locale).
+        Elles ne sont ni envoyées sur internet, ni partagées. <strong>Pensez à exporter régulièrement une sauvegarde</strong>
+        pour ne rien perdre si le navigateur est réinitialisé ou si vous changez d'ordinateur.
+      </p>
+      <div class="form-actions">
+        <button type="button" id="donnees-export">Télécharger une sauvegarde (.json)</button>
+        <label class="btn-secondary" style="display:inline-flex;align-items:center;cursor:pointer;padding:.55rem 1rem;">
+          Restaurer une sauvegarde
+          <input type="file" id="donnees-import" accept=".json" style="display:none;">
+        </label>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Réinitialisation</h2>
+      <p class="note">Supprime définitivement toutes les recettes, dépenses, comptages, relevés et cotisants enregistrés dans ce navigateur.</p>
+      <button type="button" id="donnees-reset" class="btn-danger">Tout réinitialiser</button>
+    </div>
+  </section>
+
+</main>
+
+<footer>Amicale du Phénix · 4ᵉ RIISC — application de trésorerie locale, sans connexion internet requise après le premier chargement des polices.</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= Configuration ================= */
+  const CLE_STOCKAGE = 'phenixTresorerieData_v1';
+  const MOYENS_PAIEMENT = ['Espèces','Chèque','Virement','Carte bancaire','Autre'];
+  const BILLETS = [
+    {valeur:500, libelle:'500 €'}, {valeur:200, libelle:'200 €'}, {valeur:100, libelle:'100 €'},
+    {valeur:50,  libelle:'50 €'},  {valeur:20,  libelle:'20 €'},  {valeur:10,  libelle:'10 €'},
+    {valeur:5,   libelle:'5 €'}
+  ];
+  const PIECES = [
+    {valeur:2,    libelle:'2 €'},    {valeur:1,    libelle:'1 €'},
+    {valeur:0.50, libelle:'0,50 €'}, {valeur:0.20, libelle:'0,20 €'},
+    {valeur:0.10, libelle:'0,10 €'}, {valeur:0.05, libelle:'0,05 €'},
+    {valeur:0.02, libelle:'0,02 €'}, {valeur:0.01, libelle:'0,01 €'}
+  ];
+
+  /* ================= État ================= */
+  function etatParDefaut(){
+    return { recettes:[], depenses:[], caisseReleves:[], banqueReleves:[], cotisants:[] };
+  }
+  function chargerEtat(){
+    try{
+      const brut = localStorage.getItem(CLE_STOCKAGE);
+      if(!brut) return etatParDefaut();
+      const data = JSON.parse(brut);
+      return Object.assign(etatParDefaut(), data);
+    }catch(e){
+      console.error('Impossible de lire les données enregistrées', e);
+      return etatParDefaut();
+    }
+  }
+  function sauvegarderEtat(){
+    localStorage.setItem(CLE_STOCKAGE, JSON.stringify(state));
+  }
+
+  let state = chargerEtat();
+  let chequesDraft = [];
+
+  /* ================= Utilitaires ================= */
+  function genererId(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+  function formaterMontant(n){
+    const val = Number(n) || 0;
+    return val.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  }
+  function formaterDate(iso){
+    if(!iso) return '—';
+    const parts = iso.split('-');
+    if(parts.length!==3) return iso;
+    return parts[2]+'/'+parts[1]+'/'+parts[0];
+  }
+  function aujourdHui(){
+    return new Date().toISOString().slice(0,10);
+  }
+  function echapperHtml(str){
+    const d = document.createElement('div');
+    d.textContent = (str===undefined||str===null) ? '' : String(str);
+    return d.innerHTML;
+  }
+  function normaliser(str){
+    return String(str||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  }
+
+  /* ================= Calculs ================= */
+  function totauxGlobaux(){
+    const totalRecettes = state.recettes.reduce((s,r)=>s+Number(r.montant),0);
+    const totalDepenses = state.depenses.reduce((s,d)=>s+Number(d.montant),0);
+    const especesRecettes = state.recettes.filter(r=>r.moyen==='Espèces').reduce((s,r)=>s+Number(r.montant),0);
+    const especesDepenses = state.depenses.filter(d=>d.moyen==='Espèces').reduce((s,d)=>s+Number(d.montant),0);
+    const soldeCaisseTheorique = especesRecettes - especesDepenses;
+    const soldeBanqueTheorique = (totalRecettes-especesRecettes) - (totalDepenses-especesDepenses);
+    return {
+      totalRecettes, totalDepenses,
+      resultat: totalRecettes - totalDepenses,
+      soldeCaisseTheorique, soldeBanqueTheorique
+    };
+  }
+
+  /* ================= Navigation ================= */
+  function changerOnglet(nom){
+    document.querySelectorAll('.tab-panel').forEach(p=>{ p.hidden = (p.id !== 'tab-'+nom); });
+    document.querySelectorAll('.tab-btn').forEach(b=>{ b.classList.toggle('active', b.dataset.tab===nom); });
+    rafraichirTout();
+  }
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.addEventListener('click', ()=>changerOnglet(b.dataset.tab));
+  });
+
+  /* ================= En-tête (chip) ================= */
+  function rafraichirEnTete(){
+    const t = totauxGlobaux();
+    const chip = document.getElementById('chip-resultat');
+    chip.textContent = formaterMontant(t.resultat);
+    chip.style.color = t.resultat >= 0 ? '' : '#e08a8a';
+  }
+
+  /* ================= TABLEAU DE BORD ================= */
+  function renderDashboard(){
+    const t = totauxGlobaux();
+    const cotisantsPayes = state.cotisants.filter(c=>c.paye).length;
+    const cartes = [
+      {libelle:'Total recettes', val: formaterMontant(t.totalRecettes)},
+      {libelle:'Total dépenses', val: formaterMontant(t.totalDepenses)},
+      {libelle:'Résultat cumulé', val: formaterMontant(t.resultat)},
+      {libelle:'Solde caisse théorique', val: formaterMontant(t.soldeCaisseTheorique)},
+      {libelle:'Solde banque théorique', val: formaterMontant(t.soldeBanqueTheorique)},
+      {libelle:'Cotisants (à jour)', val: cotisantsPayes + ' / ' + state.cotisants.length}
+    ];
+    document.getElementById('dashboard-stats').innerHTML = cartes.map(c=>
+      '<div class="stat-card"><div class="libelle">'+echapperHtml(c.libelle)+'</div><div class="valeur">'+echapperHtml(c.val)+'</div></div>'
+    ).join('');
+
+    const operations = []
+      .concat(state.recettes.map(r=>Object.assign({type:'Recette'}, r)))
+      .concat(state.depenses.map(d=>Object.assign({type:'Dépense'}, d)))
+      .sort((a,b)=> (a.date<b.date?1:-1))
+      .slice(0,8);
+
+    if(operations.length===0){
+      document.getElementById('dashboard-recent').innerHTML = '<p class="vide">Aucune opération enregistrée pour le moment.</p>';
+    } else {
+      let html = '<table><thead><tr><th>Date</th><th>Type</th><th>Libellé</th><th>Moyen</th><th class="num">Montant</th></tr></thead><tbody>';
+      operations.forEach(o=>{
+        const classe = o.type==='Recette' ? 'pos' : 'neg';
+        const signe = o.type==='Recette' ? '+' : '−';
+        html += '<tr><td>'+formaterDate(o.date)+'</td><td>'+o.type+'</td><td>'+echapperHtml(o.libelle)+'</td><td>'+echapperHtml(o.moyen)+'</td><td class="num '+classe+'">'+signe+' '+formaterMontant(o.montant)+'</td></tr>';
+      });
+      html += '</tbody></table>';
+      document.getElementById('dashboard-recent').innerHTML = html;
+    }
+  }
+
+  /* ================= RECETTES & DEPENSES (logique commune) ================= */
+  function creerGestionMouvements(type){
+    // type = 'recette' ou 'depense'
+    const collection = type==='recette' ? 'recettes' : 'depenses';
+    const prefix = type;
+
+    function elements(){
+      return {
+        form: document.getElementById('form-'+prefix),
+        editId: document.getElementById(prefix+'-edit-id'),
+        date: document.getElementById(prefix+'-date'),
+        libelle: document.getElementById(prefix+'-libelle'),
+        montant: document.getElementById(prefix+'-montant'),
+        moyen: document.getElementById(prefix+'-moyen'),
+        submitBtn: document.getElementById(prefix+'-submit-btn'),
+        cancelBtn: document.getElementById(prefix+'-cancel-btn'),
+        titre: document.getElementById(prefix+'-form-titre'),
+        recherche: document.getElementById(prefix+'-recherche'),
+        dateDebut: document.getElementById(prefix+'-date-debut'),
+        dateFin: document.getElementById(prefix+'-date-fin'),
+        filtreReset: document.getElementById(prefix+'-filtre-reset'),
+        exportBtn: document.getElementById(prefix+'-export'),
+        tableContainer: document.getElementById(prefix+'s-table')
+      };
+    }
+
+    function annulerEdition(){
+      const el = elements();
+      el.editId.value = '';
+      el.form.reset();
+      el.date.value = aujourdHui();
+      el.submitBtn.textContent = 'Ajouter';
+      el.titre.textContent = type==='recette' ? 'Ajouter une recette' : 'Ajouter une dépense';
+      el.cancelBtn.hidden = true;
+    }
+
+    function commencerEdition(item){
+      const el = elements();
+      el.editId.value = item.id;
+      el.date.value = item.date;
+      el.libelle.value = item.libelle;
+      el.montant.value = item.montant;
+      el.moyen.value = item.moyen;
+      el.submitBtn.textContent = 'Mettre à jour';
+      el.titre.textContent = type==='recette' ? 'Modifier la recette' : 'Modifier la dépense';
+      el.cancelBtn.hidden = false;
+      el.form.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    function supprimer(id){
+      if(!confirm('Supprimer définitivement cette ligne ?')) return;
+      state[collection] = state[collection].filter(x=>x.id!==id);
+      sauvegarderEtat();
+      rafraichirTout();
+    }
+
+    function soumettre(e){
+      e.preventDefault();
+      const el = elements();
+      const montant = parseFloat(el.montant.value);
+      if(isNaN(montant) || montant < 0){ alert('Merci de saisir un montant valide.'); return; }
+      const item = {
+        id: el.editId.value || genererId(),
+        date: el.date.value || aujourdHui(),
+        libelle: el.libelle.value.trim(),
+        montant: montant,
+        moyen: el.moyen.value
+      };
+      if(el.editId.value){
+        const idx = state[collection].findIndex(x=>x.id===el.editId.value);
+        if(idx>-1) state[collection][idx] = item;
+      } else {
+        state[collection].push(item);
+      }
+      sauvegarderEtat();
+      annulerEdition();
+      rafraichirTout();
+    }
+
+    function listeFiltree(){
+      const el = elements();
+      const recherche = normaliser(el.recherche.value);
+      const debut = el.dateDebut.value;
+      const fin = el.dateFin.value;
+      return state[collection]
+        .filter(x => !recherche || normaliser(x.libelle).includes(recherche))
+        .filter(x => !debut || x.date >= debut)
+        .filter(x => !fin || x.date <= fin)
+        .sort((a,b)=> a.date < b.date ? 1 : -1);
+    }
+
+    function render(){
+      const el = elements();
+      const liste = listeFiltree();
+      if(liste.length===0){
+        el.tableContainer.innerHTML = '<p class="vide">Aucune ligne pour ces critères.</p>';
+        return;
+      }
+      const total = liste.reduce((s,x)=>s+Number(x.montant),0);
+      let html = '<table><thead><tr><th>Date</th><th>Libellé</th><th>Moyen de paiement</th><th class="num">Montant</th><th>Actions</th></tr></thead><tbody>';
+      liste.forEach(x=>{
+        html += '<tr><td>'+formaterDate(x.date)+'</td><td>'+echapperHtml(x.libelle)+'</td><td>'+echapperHtml(x.moyen)+'</td><td class="num">'+formaterMontant(x.montant)+'</td>'
+          + '<td class="actions-col">'
+          + '<button type="button" class="btn-secondary btn-small" data-action="modifier" data-id="'+x.id+'">Modifier</button>'
+          + '<button type="button" class="btn-danger btn-small" data-action="supprimer" data-id="'+x.id+'">Supprimer</button>'
+          + '</td></tr>';
+      });
+      html += '<tr class="ligne-total"><td colspan="3">Total ('+liste.length+' ligne'+(liste.length>1?'s':'')+')</td><td class="num">'+formaterMontant(total)+'</td><td></td></tr>';
+      html += '</tbody></table>';
+      el.tableContainer.innerHTML = html;
+
+      el.tableContainer.querySelectorAll('button[data-action]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.dataset.id;
+          if(btn.dataset.action==='supprimer'){ supprimer(id); }
+          else {
+            const item = state[collection].find(x=>x.id===id);
+            if(item) commencerEdition(item);
+          }
+        });
+      });
+    }
+
+    function exporterExcel(){
+      const liste = listeFiltree();
+      const lignes = liste.map(x=>({
+        Date: formaterDate(x.date),
+        Libellé: x.libelle,
+        'Moyen de paiement': x.moyen,
+        'Montant (€)': x.montant
+      }));
+      const feuille = XLSX.utils.json_to_sheet(lignes);
+      const classeur = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(classeur, feuille, type==='recette' ? 'Recettes' : 'Depenses');
+      XLSX.writeFile(classeur, (type==='recette' ? 'recettes' : 'depenses') + '_phenix.xlsx');
+    }
+
+    function initialiser(){
+      const el = elements();
+      el.date.value = aujourdHui();
+      el.form.addEventListener('submit', soumettre);
+      el.cancelBtn.addEventListener('click', annulerEdition);
+      el.recherche.addEventListener('input', render);
+      el.dateDebut.addEventListener('change', render);
+      el.dateFin.addEventListener('change', render);
+      el.filtreReset.addEventListener('click', ()=>{
+        el.recherche.value=''; el.dateDebut.value=''; el.dateFin.value=''; render();
+      });
+      el.exportBtn.addEventListener('click', exporterExcel);
+    }
+
+    return { initialiser, render };
+  }
+
+  const gestionRecettes = creerGestionMouvements('recette');
+  const gestionDepenses = creerGestionMouvements('depense');
+
+  /* ================= CAISSE ================= */
+  function construireGrilleDenominations(conteneurId, denominations, prefixeId){
+    const conteneur = document.getElementById(conteneurId);
+    conteneur.innerHTML = denominations.map(d=>
+      '<div class="denom-item">'
+      + '<span class="denom-label">'+d.libelle+'</span>'
+      + '<input type="number" min="0" step="1" value="0" id="'+prefixeId+'-'+d.valeur+'" data-valeur="'+d.valeur+'">'
+      + '<span class="sous-total" id="'+prefixeId+'-soustotal-'+d.valeur+'">0,00 €</span>'
+      + '</div>'
+    ).join('');
+    conteneur.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', recalculerTotalCaisse);
+    });
+  }
+
+  function renderChequesDraft(){
+    const conteneur = document.getElementById('caisse-cheques-list');
+    if(chequesDraft.length===0){
+      conteneur.innerHTML = '<p class="vide">Aucun chèque ajouté.</p>';
+      return;
+    }
+    conteneur.innerHTML = chequesDraft.map((c,i)=>
+      '<div class="cheque-row">'
+      + '<input type="text" placeholder="Émetteur / référence" value="'+echapperHtml(c.libelle)+'" data-index="'+i+'" data-champ="libelle">'
+      + '<input type="number" step="0.01" min="0" placeholder="Montant" value="'+(c.montant||'')+'" data-index="'+i+'" data-champ="montant" style="max-width:140px;">'
+      + '<button type="button" class="btn-danger btn-small" data-action="suppr-cheque" data-index="'+i+'">✕</button>'
+      + '</div>'
+    ).join('');
+    conteneur.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const i = parseInt(inp.dataset.index,10);
+        chequesDraft[i][inp.dataset.champ] = inp.dataset.champ==='montant' ? parseFloat(inp.value)||0 : inp.value;
+        recalculerTotalCaisse();
+      });
+    });
+    conteneur.querySelectorAll('button[data-action="suppr-cheque"]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        chequesDraft.splice(parseInt(btn.dataset.index,10),1);
+        renderChequesDraft();
+        recalculerTotalCaisse();
+      });
+    });
+  }
+
+  function lireQuantitesFormulaire(denominations, prefixeId){
+    const resultat = {};
+    denominations.forEach(d=>{
+      const inp = document.getElementById(prefixeId+'-'+d.valeur);
+      const qte = parseInt(inp.value,10) || 0;
+      resultat[d.valeur] = qte;
+      const st = document.getElementById(prefixeId+'-soustotal-'+d.valeur);
+      if(st) st.textContent = formaterMontant(qte*d.valeur);
+    });
+    return resultat;
+  }
+
+  function calculerTotalCaisseCourant(){
+    const billets = lireQuantitesFormulaire(BILLETS,'billet');
+    const pieces = lireQuantitesFormulaire(PIECES,'piece');
+    let total = 0;
+    BILLETS.forEach(d=> total += (billets[d.valeur]||0)*d.valeur);
+    PIECES.forEach(d=> total += (pieces[d.valeur]||0)*d.valeur);
+    const totalCheques = chequesDraft.reduce((s,c)=>s+(Number(c.montant)||0),0);
+    total += totalCheques;
+    return {billets, pieces, total};
+  }
+
+  function recalculerTotalCaisse(){
+    const r = calculerTotalCaisseCourant();
+    document.getElementById('caisse-total-affiche').textContent = formaterMontant(r.total);
+  }
+
+  function annulerEditionCaisse(){
+    document.getElementById('caisse-edit-id').value = '';
+    document.getElementById('caisse-date').value = aujourdHui();
+    document.getElementById('caisse-note').value = '';
+    chequesDraft = [];
+    renderChequesDraft();
+    BILLETS.forEach(d=>{ document.getElementById('billet-'+d.valeur).value = 0; });
+    PIECES.forEach(d=>{ document.getElementById('piece-'+d.valeur).value = 0; });
+    recalculerTotalCaisse();
+    document.getElementById('caisse-form-titre').textContent = 'Nouveau comptage de caisse';
+    document.getElementById('caisse-submit-btn').textContent = 'Enregistrer ce comptage';
+    document.getElementById('caisse-cancel-btn').hidden = true;
+  }
+
+  function commencerEditionCaisse(releve){
+    document.getElementById('caisse-edit-id').value = releve.id;
+    document.getElementById('caisse-date').value = releve.date;
+    document.getElementById('caisse-note').value = releve.note || '';
+    BILLETS.forEach(d=>{ document.getElementById('billet-'+d.valeur).value = (releve.billets && releve.billets[d.valeur]) || 0; });
+    PIECES.forEach(d=>{ document.getElementById('piece-'+d.valeur).value = (releve.pieces && releve.pieces[d.valeur]) || 0; });
+    chequesDraft = (releve.cheques||[]).map(c=>Object.assign({},c));
+    renderChequesDraft();
+    recalculerTotalCaisse();
+    document.getElementById('caisse-form-titre').textContent = 'Modifier le comptage';
+    document.getElementById('caisse-submit-btn').textContent = 'Mettre à jour ce comptage';
+    document.getElementById('caisse-cancel-btn').hidden = false;
+    document.getElementById('caisse-form-titre').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function enregistrerComptageCaisse(){
+    const r = calculerTotalCaisseCourant();
+    const editId = document.getElementById('caisse-edit-id').value;
+    const releve = {
+      id: editId || genererId(),
+      date: document.getElementById('caisse-date').value || aujourdHui(),
+      billets: r.billets,
+      pieces: r.pieces,
+      cheques: chequesDraft.map(c=>Object.assign({},c)),
+      note: document.getElementById('caisse-note').value.trim(),
+      total: r.total
+    };
+    if(editId){
+      const idx = state.caisseReleves.findIndex(x=>x.id===editId);
+      if(idx>-1) state.caisseReleves[idx] = releve;
+    } else {
+      state.caisseReleves.push(releve);
+    }
+    sauvegarderEtat();
+    annulerEditionCaisse();
+    rafraichirTout();
+  }
+
+  function supprimerComptageCaisse(id){
+    if(!confirm('Supprimer définitivement ce comptage ?')) return;
+    state.caisseReleves = state.caisseReleves.filter(x=>x.id!==id);
+    sauvegarderEtat();
+    rafraichirTout();
+  }
+
+  function renderCaisse(){
+    const t = totauxGlobaux();
+    document.getElementById('caisse-theorique-affiche').textContent = formaterMontant(t.soldeCaisseTheorique);
+
+    const conteneur = document.getElementById('caisse-historique');
+    const liste = state.caisseReleves.slice().sort((a,b)=> a.date<b.date?1:-1);
+    if(liste.length===0){
+      conteneur.innerHTML = '<p class="vide">Aucun comptage enregistré pour le moment.</p>';
+      return;
+    }
+    let html = '<table><thead><tr><th>Date</th><th>Note</th><th class="num">Total compté</th><th class="num">Écart vs théorique</th><th>Actions</th></tr></thead><tbody>';
+    liste.forEach(r=>{
+      const ecart = r.total - t.soldeCaisseTheorique;
+      const classeEcart = Math.abs(ecart) < 0.01 ? 'ecart-ok' : 'ecart-bad';
+      html += '<tr><td>'+formaterDate(r.date)+'</td><td>'+echapperHtml(r.note||'—')+'</td>'
+        + '<td class="num">'+formaterMontant(r.total)+'</td>'
+        + '<td class="num '+classeEcart+'">'+(ecart>=0?'+':'')+formaterMontant(ecart)+'</td>'
+        + '<td class="actions-col">'
+        + '<button type="button" class="btn-secondary btn-small" data-action="modifier" data-id="'+r.id+'">Modifier</button>'
+        + '<button type="button" class="btn-danger btn-small" data-action="supprimer" data-id="'+r.id+'">Supprimer</button>'
+        + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    conteneur.innerHTML = html;
+    conteneur.querySelectorAll('button[data-action]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.dataset.id;
+        if(btn.dataset.action==='supprimer'){ supprimerComptageCaisse(id); }
+        else {
+          const releve = state.caisseReleves.find(x=>x.id===id);
+          if(releve) commencerEditionCaisse(releve);
+        }
+      });
+    });
+  }
+
+  /* ================= BANQUE ================= */
+  function annulerEditionBanque(){
+    document.getElementById('banque-edit-id').value = '';
+    document.getElementById('form-banque').reset();
+    document.getElementById('banque-date').value = aujourdHui();
+    document.getElementById('banque-submit-btn').textContent = 'Ajouter';
+    document.getElementById('banque-form-titre').textContent = 'Ajouter un relevé bancaire';
+    document.getElementById('banque-cancel-btn').hidden = true;
+  }
+  function commencerEditionBanque(item){
+    document.getElementById('banque-edit-id').value = item.id;
+    document.getElementById('banque-date').value = item.date;
+    document.getElementById('banque-solde').value = item.solde;
+    document.getElementById('banque-note').value = item.note || '';
+    document.getElementById('banque-submit-btn').textContent = 'Mettre à jour';
+    document.getElementById('banque-form-titre').textContent = 'Modifier le relevé';
+    document.getElementById('banque-cancel-btn').hidden = false;
+    document.getElementById('form-banque').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function supprimerReleveBanque(id){
+    if(!confirm('Supprimer définitivement ce relevé ?')) return;
+    state.banqueReleves = state.banqueReleves.filter(x=>x.id!==id);
+    sauvegarderEtat();
+    rafraichirTout();
+  }
+  function soumettreBanque(e){
+    e.preventDefault();
+    const editId = document.getElementById('banque-edit-id').value;
+    const solde = parseFloat(document.getElementById('banque-solde').value);
+    if(isNaN(solde)){ alert('Merci de saisir un solde valide.'); return; }
+    const item = {
+      id: editId || genererId(),
+      date: document.getElementById('banque-date').value || aujourdHui(),
+      solde: solde,
+      note: document.getElementById('banque-note').value.trim()
+    };
+    if(editId){
+      const idx = state.banqueReleves.findIndex(x=>x.id===editId);
+      if(idx>-1) state.banqueReleves[idx] = item;
+    } else {
+      state.banqueReleves.push(item);
+    }
+    sauvegarderEtat();
+    annulerEditionBanque();
+    rafraichirTout();
+  }
+  function renderBanque(){
+    const t = totauxGlobaux();
+    document.getElementById('banque-theorique-affiche').textContent = formaterMontant(t.soldeBanqueTheorique);
+    const conteneur = document.getElementById('banque-historique');
+    const liste = state.banqueReleves.slice().sort((a,b)=> a.date<b.date?1:-1);
+    if(liste.length===0){
+      conteneur.innerHTML = '<p class="vide">Aucun relevé enregistré pour le moment.</p>';
+      return;
+    }
+    let html = '<table><thead><tr><th>Date</th><th>Note</th><th class="num">Solde réel</th><th class="num">Écart vs théorique</th><th>Actions</th></tr></thead><tbody>';
+    liste.forEach(r=>{
+      const ecart = r.solde - t.soldeBanqueTheorique;
+      const classeEcart = Math.abs(ecart) < 0.01 ? 'ecart-ok' : 'ecart-bad';
+      html += '<tr><td>'+formaterDate(r.date)+'</td><td>'+echapperHtml(r.note||'—')+'</td>'
+        + '<td class="num">'+formaterMontant(r.solde)+'</td>'
+        + '<td class="num '+classeEcart+'">'+(ecart>=0?'+':'')+formaterMontant(ecart)+'</td>'
+        + '<td class="actions-col">'
+        + '<button type="button" class="btn-secondary btn-small" data-action="modifier" data-id="'+r.id+'">Modifier</button>'
+        + '<button type="button" class="btn-danger btn-small" data-action="supprimer" data-id="'+r.id+'">Supprimer</button>'
+        + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    conteneur.innerHTML = html;
+    conteneur.querySelectorAll('button[data-action]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.dataset.id;
+        if(btn.dataset.action==='supprimer'){ supprimerReleveBanque(id); }
+        else {
+          const item = state.banqueReleves.find(x=>x.id===id);
+          if(item) commencerEditionBanque(item);
+        }
+      });
+    });
+  }
+
+  /* ================= COTISANTS ================= */
+  function annulerEditionCotisant(){
+    document.getElementById('cotisant-edit-id').value = '';
+    document.getElementById('form-cotisant').reset();
+    document.getElementById('cotisant-submit-btn').textContent = 'Ajouter';
+    document.getElementById('cotisant-form-titre').textContent = 'Ajouter un cotisant';
+    document.getElementById('cotisant-cancel-btn').hidden = true;
+  }
+  function commencerEditionCotisant(item){
+    document.getElementById('cotisant-edit-id').value = item.id;
+    document.getElementById('cotisant-grade').value = item.grade || '';
+    document.getElementById('cotisant-nom').value = item.nom || '';
+    document.getElementById('cotisant-prenom').value = item.prenom || '';
+    document.getElementById('cotisant-montant').value = item.montant || '';
+    document.getElementById('cotisant-date').value = item.date || '';
+    document.getElementById('cotisant-paye').checked = !!item.paye;
+    document.getElementById('cotisant-submit-btn').textContent = 'Mettre à jour';
+    document.getElementById('cotisant-form-titre').textContent = 'Modifier le cotisant';
+    document.getElementById('cotisant-cancel-btn').hidden = false;
+    document.getElementById('form-cotisant').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function supprimerCotisant(id){
+    if(!confirm('Supprimer définitivement ce cotisant ?')) return;
+    state.cotisants = state.cotisants.filter(x=>x.id!==id);
+    sauvegarderEtat();
+    rafraichirTout();
+  }
+  function soumettreCotisant(e){
+    e.preventDefault();
+    const editId = document.getElementById('cotisant-edit-id').value;
+    const item = {
+      id: editId || genererId(),
+      grade: document.getElementById('cotisant-grade').value.trim(),
+      nom: document.getElementById('cotisant-nom').value.trim(),
+      prenom: document.getElementById('cotisant-prenom').value.trim(),
+      montant: parseFloat(document.getElementById('cotisant-montant').value) || 0,
+      date: document.getElementById('cotisant-date').value,
+      paye: document.getElementById('cotisant-paye').checked
+    };
+    if(editId){
+      const idx = state.cotisants.findIndex(x=>x.id===editId);
+      if(idx>-1) state.cotisants[idx] = item;
+    } else {
+      state.cotisants.push(item);
+    }
+    sauvegarderEtat();
+    annulerEditionCotisant();
+    rafraichirTout();
+  }
+  function basculerPaye(id){
+    const item = state.cotisants.find(x=>x.id===id);
+    if(!item) return;
+    item.paye = !item.paye;
+    if(item.paye && !item.date) item.date = aujourdHui();
+    sauvegarderEtat();
+    renderCotisants();
+  }
+  function renderCotisants(){
+    const conteneur = document.getElementById('cotisants-table');
+    const recherche = normaliser(document.getElementById('cotisant-recherche').value);
+    const liste = state.cotisants
+      .filter(c => !recherche || normaliser(c.nom+' '+c.prenom).includes(recherche))
+      .sort((a,b)=> (a.nom||'').localeCompare(b.nom||''));
+    if(liste.length===0){
+      conteneur.innerHTML = '<p class="vide">Aucun cotisant enregistré. Importez un fichier Excel ou ajoutez-en un manuellement.</p>';
+      return;
+    }
+    let html = '<table><thead><tr><th>Grade</th><th>Nom</th><th>Prénom</th><th>Cotisation</th><th class="num">Montant</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+    liste.forEach(c=>{
+      html += '<tr><td>'+echapperHtml(c.grade)+'</td><td>'+echapperHtml(c.nom)+'</td><td>'+echapperHtml(c.prenom)+'</td>'
+        + '<td><label style="display:inline-flex;align-items:center;gap:.4rem;font-weight:400;"><input type="checkbox" style="width:auto;" data-action="toggle-paye" data-id="'+c.id+'" '+(c.paye?'checked':'')+'> '+(c.paye?'Versée':'Non versée')+'</label></td>'
+        + '<td class="num">'+(c.montant?formaterMontant(c.montant):'—')+'</td>'
+        + '<td>'+formaterDate(c.date)+'</td>'
+        + '<td class="actions-col">'
+        + '<button type="button" class="btn-secondary btn-small" data-action="modifier" data-id="'+c.id+'">Modifier</button>'
+        + '<button type="button" class="btn-danger btn-small" data-action="supprimer" data-id="'+c.id+'">Supprimer</button>'
+        + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    conteneur.innerHTML = html;
+    conteneur.querySelectorAll('button[data-action="modifier"]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const item = state.cotisants.find(x=>x.id===btn.dataset.id);
+        if(item) commencerEditionCotisant(item);
+      });
+    });
+    conteneur.querySelectorAll('button[data-action="supprimer"]').forEach(btn=>{
+      btn.addEventListener('click', ()=> supprimerCotisant(btn.dataset.id));
+    });
+    conteneur.querySelectorAll('input[data-action="toggle-paye"]').forEach(chk=>{
+      chk.addEventListener('change', ()=> basculerPaye(chk.dataset.id));
+    });
+  }
+
+  function exporterCotisantsExcel(){
+    const lignes = state.cotisants.map(c=>({
+      Grade: c.grade, Nom: c.nom, Prénom: c.prenom,
+      'Cotisation versée': c.paye ? 'Oui' : 'Non',
+      'Montant (€)': c.montant || '',
+      Date: c.date ? formaterDate(c.date) : ''
+    }));
+    const feuille = XLSX.utils.json_to_sheet(lignes);
+    const classeur = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(classeur, feuille, 'Cotisants');
+    XLSX.writeFile(classeur, 'cotisants_phenix.xlsx');
+  }
+
+  function variantesCorrespondent(valeurNormalisee, variantes){
+    return variantes.includes(valeurNormalisee);
+  }
+
+  function importerCotisantsDepuisFichier(fichier){
+    const lecteur = new FileReader();
+    lecteur.onload = function(e){
+      try{
+        const data = new Uint8Array(e.target.result);
+        const classeur = XLSX.read(data, {type:'array'});
+        const feuille = classeur.Sheets[classeur.SheetNames[0]];
+        const lignes = XLSX.utils.sheet_to_json(feuille, {header:1, defval:''});
+        if(lignes.length===0){ alert('Le fichier semble vide.'); return; }
+
+        const variantesGrade = ['grade','rang'];
+        const variantesNom = ['nom','nomdefamille'];
+        const variantesPrenom = ['prenom'];
+        const variantesCotisation = ['cotisation','cotisationversee','statut','paye','paiement'];
+        const variantesMontant = ['montant','montantcotisation','somme'];
+        const variantesDate = ['date','datepaiement','datecotisation'];
+
+        const enTete = lignes[0].map(normaliser);
+        let colGrade=-1, colNom=-1, colPrenom=-1, colCotisation=-1, colMontant=-1, colDate=-1;
+        enTete.forEach((h,i)=>{
+          if(colGrade===-1 && variantesCorrespondent(h,variantesGrade)) colGrade=i;
+          else if(colPrenom===-1 && variantesCorrespondent(h,variantesPrenom)) colPrenom=i;
+          else if(colNom===-1 && variantesCorrespondent(h,variantesNom)) colNom=i;
+          else if(colCotisation===-1 && variantesCorrespondent(h,variantesCotisation)) colCotisation=i;
+          else if(colMontant===-1 && variantesCorrespondent(h,variantesMontant)) colMontant=i;
+          else if(colDate===-1 && variantesCorrespondent(h,variantesDate)) colDate=i;
+        });
+
+        let ligneDepart = 1;
+        if(colNom===-1 && colPrenom===-1){
+          // Pas d'en-tête reconnu : on suppose l'ordre Grade, Nom, Prénom dès la première ligne
+          colGrade = 0; colNom = 1; colPrenom = 2;
+          ligneDepart = 0;
+        }
+
+        const nouveaux = [];
+        for(let i=ligneDepart; i<lignes.length; i++){
+          const ligne = lignes[i];
+          if(!ligne || ligne.every(v=>String(v).trim()==='')) continue;
+          const nom = colNom>-1 ? String(ligne[colNom]||'').trim() : '';
+          const prenom = colPrenom>-1 ? String(ligne[colPrenom]||'').trim() : '';
+          if(!nom && !prenom) continue;
+          const statutTexte = colCotisation>-1 ? normaliser(ligne[colCotisation]) : '';
+          nouveaux.push({
+            id: genererId(),
+            grade: colGrade>-1 ? String(ligne[colGrade]||'').trim() : '',
+            nom: nom,
+            prenom: prenom,
+            montant: colMontant>-1 ? (parseFloat(ligne[colMontant])||0) : 0,
+            date: colDate>-1 ? String(ligne[colDate]||'').trim() : '',
+            paye: ['oui','yes','x','versee','versée','paye','paid','1','true'].includes(statutTexte)
+          });
+        }
+
+        if(nouveaux.length===0){ alert("Aucun cotisant n'a pu être reconnu dans ce fichier. Vérifiez les colonnes Grade, Nom, Prénom."); return; }
+
+        const remplacer = confirm(nouveaux.length+' cotisant(s) trouvé(s).\n\nOK = remplacer toute la liste actuelle.\nAnnuler = ajouter à la liste existante.');
+        if(remplacer){
+          state.cotisants = nouveaux;
+        } else {
+          state.cotisants = state.cotisants.concat(nouveaux);
+        }
+        sauvegarderEtat();
+        rafraichirTout();
+        alert('Import terminé : '+nouveaux.length+' cotisant(s) traité(s).');
+      }catch(err){
+        console.error(err);
+        alert("Impossible de lire ce fichier. Vérifiez qu'il s'agit bien d'un fichier Excel (.xlsx, .xls) ou .csv valide.");
+      }
+    };
+    lecteur.readAsArrayBuffer(fichier);
+  }
+
+  /* ================= DONNEES (sauvegarde / restauration) ================= */
+  function exporterSauvegarde(){
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const horodatage = aujourdHui();
+    a.href = url;
+    a.download = 'sauvegarde_phenix_'+horodatage+'.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function importerSauvegarde(fichier){
+    const lecteur = new FileReader();
+    lecteur.onload = function(e){
+      try{
+        const data = JSON.parse(e.target.result);
+        if(!confirm("Restaurer cette sauvegarde remplacera toutes les données actuelles. Continuer ?")) return;
+        state = Object.assign(etatParDefaut(), data);
+        sauvegarderEtat();
+        rafraichirTout();
+        alert('Sauvegarde restaurée avec succès.');
+      }catch(err){
+        console.error(err);
+        alert('Ce fichier ne semble pas être une sauvegarde valide.');
+      }
+    };
+    lecteur.readAsText(fichier);
+  }
+  function reinitialiserDonnees(){
+    if(!confirm('Cette action supprimera TOUTES les données (recettes, dépenses, caisse, banque, cotisants). Continuer ?')) return;
+    if(!confirm('Dernière confirmation : voulez-vous vraiment tout réinitialiser ?')) return;
+    state = etatParDefaut();
+    sauvegarderEtat();
+    rafraichirTout();
+  }
+
+  /* ================= Rafraîchissement global ================= */
+  function rafraichirTout(){
+    rafraichirEnTete();
+    renderDashboard();
+    gestionRecettes.render();
+    gestionDepenses.render();
+    recalculerTotalCaisse();
+    renderCaisse();
+    renderBanque();
+    renderCotisants();
+  }
+
+  /* ================= Initialisation ================= */
+  function initialiser(){
+    gestionRecettes.initialiser();
+    gestionDepenses.initialiser();
+
+    construireGrilleDenominations('caisse-billets-grid', BILLETS, 'billet');
+    construireGrilleDenominations('caisse-pieces-grid', PIECES, 'piece');
+    document.getElementById('caisse-date').value = aujourdHui();
+    renderChequesDraft();
+    document.getElementById('caisse-ajouter-cheque').addEventListener('click', ()=>{
+      chequesDraft.push({libelle:'', montant:0});
+      renderChequesDraft();
+    });
+    document.getElementById('caisse-submit-btn').addEventListener('click', enregistrerComptageCaisse);
+    document.getElementById('caisse-cancel-btn').addEventListener('click', annulerEditionCaisse);
+
+    document.getElementById('banque-date').value = aujourdHui();
+    document.getElementById('form-banque').addEventListener('submit', soumettreBanque);
+    document.getElementById('banque-cancel-btn').addEventListener('click', annulerEditionBanque);
+
+    document.getElementById('form-cotisant').addEventListener('submit', soumettreCotisant);
+    document.getElementById('cotisant-cancel-btn').addEventListener('click', annulerEditionCotisant);
+    document.getElementById('cotisant-recherche').addEventListener('input', renderCotisants);
+    document.getElementById('cotisant-export').addEventListener('click', exporterCotisantsExcel);
+    document.getElementById('cotisants-import').addEventListener('change', (e)=>{
+      if(e.target.files && e.target.files[0]){
+        importerCotisantsDepuisFichier(e.target.files[0]);
+        e.target.value = '';
+      }
+    });
+
+    document.getElementById('donnees-export').addEventListener('click', exporterSauvegarde);
+    document.getElementById('donnees-import').addEventListener('change', (e)=>{
+      if(e.target.files && e.target.files[0]){
+        importerSauvegarde(e.target.files[0]);
+        e.target.value = '';
+      }
+    });
+    document.getElementById('donnees-reset').addEventListener('click', reinitialiserDonnees);
+
+    rafraichirTout();
+  }
+
+  initialiser();
+})();
+</script>
+</body>
+</html>
